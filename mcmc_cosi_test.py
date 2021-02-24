@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 
 
-class Cosi(object):
+class Probability(object):
     
     
     def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot):
@@ -32,7 +32,7 @@ class Cosi(object):
         
     def log_likelihood(self, theta):
         
-        cosi, rstar, prot = theta
+        cosi, r, p = theta
         
         
         sini = np.sqrt(1 - cosi**2)
@@ -46,19 +46,19 @@ class Cosi(object):
             return -np.inf
         
         
-        chi2 = (self.vsini - cvsini)**2 / self.e_vsini**2 + (rstar - self.rstar)**2 / self.e_rstar**2 + (prot - self.prot)**2 / self.e_prot**2
+        chi2 = (self.vsini - cvsini)**2 / self.e_vsini**2 + (r - self.rstar)**2 / self.e_rstar**2 + (p - self.prot)**2 / self.e_prot**2
         
         return -0.5 * chi2
     
     
     def log_prior(self, theta):
         
-        cosi, rstar, prot = theta
+        cosi, r, p = theta
         
         if cosi < 0 or cosi > 1:
             return -np.inf
         
-        if rstar < 0 or prot < 0:
+        if r < 0 or p < 0:
             return -np.inf
         
         
@@ -75,19 +75,54 @@ class Cosi(object):
         return lp + self.log_likelihood(theta)
     
     
-    def run_mcmc(self, nwalkers, nsteps, progress=True):
+    
+    
+class CosI(Probability):
+    
+    
+    def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot, nwalkers=100):
         
-        ndim = 3
+        super().__init__(vsini, e_vsini, rstar, e_rstar, prot, e_prot)
         
-        p = [0.5, self.rstar, self.prot]
+        self.nwalkers = nwalkers
+        self._ndim = 3
         
-        pos = p + 0.02 * np.random.randn(nwalkers, ndim)
+        self.sampler = emcee.EnsembleSampler(self.nwalkers, self._ndim, self.log_probability)
+    
+    
+    
+    
+    def run_mcmc(self, nsteps, position=None, progress=True):
         
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_probability)
+        p = position
         
-        sampler.run_mcmc(pos, nsteps, progress=progress)
+        if p is None:
+            p = [0.5, self.rstar, self.prot]
         
-        return sampler
+        pos = p + 0.02 * np.random.randn(self.nwalkers, self._ndim)
+        
+        self.sampler.run_mcmc(pos, nsteps, progress=progress)
+        
+        return self.sampler
+    
+    
+    
+    
+    def get_posterior(self, burnin=500, thin=1, complete=False):
+        
+        if len(self.sampler.get_chain()) < 1500:
+            burnin = len(self.sampler.get_chain()) // 3
+        
+        chain = self.sampler.get_chain(flat=True, discard=burnin, thin=thin)
+        
+        cosi = chain[:, 0]
+        rstar = chain[:, 1]
+        prot = chain[:, 2]
+        
+        if complete:
+            return cosi, rstar, prot
+        
+        return cosi
     
     
     
@@ -149,7 +184,92 @@ plt.rcParams['savefig.bbox'] = 'tight'
         
 
 
+# c = Cosi(7.3, 0.3, 0.912, 0.034, 6.45, 0.05)
 
+# sampler = c.run_mcmc(100, 1500)
+
+# chain = sampler.get_chain(discard=500, flat=True)
+
+# cosi = chain[:, 0]
+
+# i = np.arccos(cosi) * 180 / np.pi # degrees
+
+# i95 = np.nanpercentile(i, 95)
+
+# i_maxprob = np.arccos(c.get_max_probability(chain)[0]) * 180 / np.pi
+
+# fig = plt.figure()
+
+# plt.hist(i, bins='scott', linewidth=2.5, histtype='step', color='black')
+
+# plt.xlabel("Stellar Inclination ($^{\\circ}$)")
+# plt.ylabel("N")
+
+# fig.savefig('/Users/mjfields/Documents/Research/Disk_Alignment/Analysis/StellarInclination/python_inclination.pdf')
+
+# plt.close()
+
+
+
+
+""" autocorr stuff """
+
+# def next_pow_two(n):
+#     i = 1
+#     while i < n:
+#         i = i << 1
+#     return i
+
+
+# def autocorr_func_1d(x, norm=True):
+#     x = np.atleast_1d(x)
+#     if len(x.shape) != 1:
+#         raise ValueError("invalid dimensions for 1D autocorrelation function")
+#     n = next_pow_two(len(x))
+
+#     # Compute the FFT and then (from that) the auto-correlation function
+#     f = np.fft.fft(x - np.mean(x), n=2 * n)
+#     acf = np.fft.ifft(f * np.conjugate(f))[: len(x)].real
+#     acf /= 4 * n
+
+#     # Optionally normalize
+#     if norm:
+#         acf /= acf[0]
+
+#     return acf
+
+
+# def auto_window(taus, c):
+#     m = np.arange(len(taus)) < c * taus
+#     if np.any(m):
+#         return np.argmin(m)
+#     return len(taus) - 1
+
+
+# def autocorr_new(y, c=5.0):
+#     f = np.zeros(y.shape[1])
+#     for yy in y:
+#         f += autocorr_func_1d(yy)
+#     f /= len(y)
+#     taus = 2.0 * np.cumsum(f) - 1.0
+#     window = auto_window(taus, c)
+#     return taus[window]
+
+
+c = CosI(7.3, 0.3, 0.912, 0.034, 6.45, 0.05)
+
+sampler = c.run_mcmc(1500)
+
+# cosi = c.get_posterior()
+
+cosi, rstar, prot = c.get_posterior(complete=True)
+
+# fig = plt.figure()
+
+# plt.hist(cosi, bins='scott', linewidth=2.5, histtype='step', color='black')
+
+# plt.xlabel("cos(i)")
+# plt.ylabel("N")
 
 
 
