@@ -9,6 +9,26 @@ import emcee
 
 class Probability(object):
     
+    """
+    The log-probability functions used by the MCMC estimation
+    
+    Parameters
+    ----------
+    vsini : float
+        Line-of-sight stellar rotation velocity in km/s.
+    e_vsini : float
+        Uncertainty on vsini in km/s.
+    rstar : float
+        Stellar radius in solar radii.
+    e_rstar : float
+        Uncertainty on rstar in solar radii.
+    prot : float
+        Stellar rotation period in days.
+    e_prot : float
+        Uncertainty on prot in days.
+    
+    """
+    
     def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot):
         
         self.vsini = vsini # km/s
@@ -24,6 +44,22 @@ class Probability(object):
         
         
     def log_likelihood(self, theta):
+        
+        """
+        Calculates the log of the Bayesian likelihood function.
+        
+        Parameter
+        ---------
+        theta : list of floats
+            Values of the fit parameters. theta[0] is cosi, theta[1] is rstar,
+            and theta[2] is prot.
+        
+        Returns
+        -------
+        float
+            The log-likelihood value.
+        
+        """
         
         cosi, r, p = theta
         
@@ -48,6 +84,23 @@ class Probability(object):
     
     def log_prior(self, theta):
         
+        """
+        Sets boundaries that act as a uniform priors for the fit parameters.
+        
+        Parameter
+        ---------
+        theta : list of floats
+            Values of the fit parameters. theta[0] is cosi, theta[1] is rstar,
+            and theta[2] is prot.
+        
+        Returns
+        -------
+        float
+            0.0 if the fit parameters lie within the bounds,
+            -inf otherwise.
+        
+        """
+        
         cosi, r, p = theta
         
         if cosi < 0 or cosi > 1:
@@ -64,6 +117,23 @@ class Probability(object):
     
     def log_probability(self, theta):
         
+        """
+        Calculates the log of the probability as the sum of the log-prior
+        and log-likelihood.
+        
+        Parameter
+        ---------
+        theta : list of floats
+            Values of the fit parameters. theta[0] is cosi, theta[1] is rstar,
+            and theta[2] is prot.
+        
+        Returns
+        -------
+        float
+            The log-probability value (sum of log-prior and log-likelihood). 
+        
+        """
+        
         lp = self.log_prior(theta)
         
         if not np.isfinite(lp):
@@ -76,7 +146,27 @@ class Probability(object):
     
 class CosI(Probability):
     
-    def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot, nwalkers=100):
+    """
+    The MCMC estimation and extraction of posterior distribution for cosi.
+    
+    Parameters
+    ----------
+    vsini : float
+        Line-of-sight stellar rotation velocity in km/s.
+    e_vsini : float
+        Uncertainty on vsini in km/s.
+    rstar : float
+        Stellar radius in solar radii.
+    e_rstar : float
+        Uncertainty on rstar in solar radii.
+    prot : float
+        Stellar rotation period in days.
+    e_prot : float
+        Uncertainty on prot in days.
+    
+    """
+    
+    def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot):
         
         super().__init__(vsini, e_vsini, rstar, e_rstar, prot, e_prot)
     
@@ -84,6 +174,32 @@ class CosI(Probability):
     
     
     def run_mcmc(self, nwalkers, nsteps, position=None, progress=True):
+        
+        """
+        Runs an MCMC simulation using the emcee python package to estimate posterior distributions 
+        for the fit parameters cosi, rstar, and prot.
+        
+        See https://emcee.readthedocs.io/en/stable/ for more information about emcee.
+        
+        Parameters
+        ----------
+        nwalkers : int
+            The number of ensemble walkers that explore the parameter space.
+        nsteps : int
+            The total number of iterations.
+        position : list of floats, optional
+            The unperturbed initial position for each fit parameter. If None (default),
+            sets initial positions at 0.5 for cosi and the values used when initializing
+            ``class:CosI`` for rstar and prot, respectively.
+        progress : bool, optional
+            If True (default), displays a progress bar using the tqdm python package.
+            
+        Returns
+        -------
+        sampler : emcee.EnsembleSampler
+            The MCMC ensemble sampler.
+        
+        """
         
         ndim = 3
         
@@ -104,6 +220,23 @@ class CosI(Probability):
     
     
     def get_posterior(self, sampler, burnin=500, thin=1):
+        
+        """
+        Extracts the posterior distribution for cosi from the 
+        flattened MCMC sampler chain.
+        
+        Parameters
+        ----------
+        sampler : emcee.EnsembleSampler
+            The the sampler object returned by `func:run_mcmc`.
+        burnin : int, optional
+            The number of steps to discard from the beginning of the posterior
+            chain. The default is 500 steps or a third of the total number of steps
+            rounded to the nearest integer if the number of steps is less than 1500.
+        thin : int, optional
+            Only take every `thin` amount from the flattened chain. The default is 1.
+        
+        """
         
         if len(sampler.get_chain()) < 1500:
             burnin = len(self.sampler.get_chain()) // 3
