@@ -105,10 +105,10 @@ class CosI(Probability):
     
     def get_posterior(self, sampler, burnin=500, thin=1):
         
-        if len(self.sampler.get_chain()) < 1500:
+        if len(sampler.get_chain()) < 1500:
             burnin = len(self.sampler.get_chain()) // 3
         
-        chain = self.sampler.get_chain(flat=True, discard=burnin, thin=thin)
+        chain = sampler.get_chain(flat=True, discard=burnin, thin=thin)
         
         return chain[:, 0]
     
