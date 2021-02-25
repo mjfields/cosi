@@ -5,7 +5,7 @@ from .core import Probability, CosI
 
 
 
-__all__ = [Probability, CosI]
+__all__ = ["Probability", "CosI"]
 
 
 
