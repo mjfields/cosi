@@ -85,7 +85,7 @@ class Probability(object):
     def log_prior(self, theta):
         
         """
-        Sets boundaries that act as a uniform priors for the fit parameters.
+        Sets boundaries that act as uniform priors for the fit parameters.
         
         Parameter
         ---------
@@ -147,7 +147,7 @@ class Probability(object):
 class CosI(Probability):
     
     """
-    The MCMC estimation and extraction of posterior distribution for cosi.
+    The MCMC estimation and extraction of the posterior distribution for cosi.
     
     Parameters
     ----------
