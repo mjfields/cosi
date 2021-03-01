@@ -8,10 +8,11 @@ from packaging import version
 
 
 
-EMCEESUFFICIENTVERSION = True
-
-
-if version.parse(emcee.__version__) < version.parse('3.0.0'):
+if version.parse(emcee.__version__) >= version.parse('3.0.0'):
+    
+    EMCEESUFFICIENTVERSION = True
+    
+else:
     
     EMCEESUFFICIENTVERSION = False
     
