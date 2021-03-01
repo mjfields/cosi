@@ -8,11 +8,11 @@ from packaging import version
 
 
 
-EMCEESUFFICIENTVERISION = True
+EMCEESUFFICIENTVERSION = True
 
 
 if version.parse(emcee.__version__) < version.parse('3.0.0'):
     
-    EMCEESUFFICIENTVERISION = False
+    EMCEESUFFICIENTVERSION = False
     
     warnings.warn("update emcee to at least v3.0.0 or some features may not work")
