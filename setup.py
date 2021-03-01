@@ -26,5 +26,8 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(),
     python_requires='>=3.6',
-    install_requires=["numpy", "emcee"]
+    install_requires=[
+        "numpy", 
+        "emcee>=3.0.0"
+    ]
 )
