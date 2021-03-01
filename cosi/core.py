@@ -31,7 +31,7 @@ class Probability(object):
     
     """
     
-    def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot):
+    def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot, upperlimitvsini=False):
         
         self.vsini = vsini # km/s
         self.e_vsini = e_vsini
@@ -41,6 +41,8 @@ class Probability(object):
         
         self.prot = prot # days
         self.e_prot = e_prot
+        
+        self._upperlimitvsini = upperlimitvsini
         
         
         
@@ -73,8 +75,9 @@ class Probability(object):
         
         cvsini = cv * sini
         
-        if cvsini > self.vsini:
-            return -np.inf
+        if self._upperlimitvsini:
+            if cvsini > self.vsini:
+                return -np.inf
         
         
         chi2 = (self.vsini - cvsini)**2 / self.e_vsini**2 + (r - self.rstar)**2 / self.e_rstar**2 + (p - self.prot)**2 / self.e_prot**2
@@ -168,9 +171,11 @@ class CosI(Probability):
     
     """
     
-    def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot):
+    def __init__(self, vsini, e_vsini, rstar, e_rstar, prot, e_prot, upperlimitvsini=False):
         
-        super().__init__(vsini, e_vsini, rstar, e_rstar, prot, e_prot)
+        self._upperlimitvsini = upperlimitvsini
+        
+        super().__init__(vsini, e_vsini, rstar, e_rstar, prot, e_prot, upperlimitvsini=self._upperlimitvsini)
     
     
     
