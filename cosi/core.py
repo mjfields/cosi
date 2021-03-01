@@ -4,6 +4,8 @@
 import numpy as np
 import emcee
 
+from .config import EMCEESUFFICIENTVERSION
+
 
 
 
@@ -212,7 +214,11 @@ class CosI(Probability):
         
         sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_probability)
         
-        sampler.run_mcmc(pos, nsteps, progress=progress)
+        if EMCEESUFFICIENTVERSION:
+            sampler.run_mcmc(pos, nsteps, progress=progress)
+        
+        else:
+            sampler.run_mcmc(pos, nsteps)
         
         return sampler
     
