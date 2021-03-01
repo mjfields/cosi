@@ -28,6 +28,9 @@ class Probability(object):
         Stellar rotation period in days.
     e_prot : float
         Uncertainty on prot in days.
+    upperlimitvsini : bool, optional
+        Is vsini only available as an upper limit? The default is False,
+        i.e., vsini is measured with some confidence.
     
     """
     
@@ -75,12 +78,16 @@ class Probability(object):
         
         cvsini = cv * sini
         
+        # if vsini is only known as an upper limit
         if self._upperlimitvsini:
             if cvsini > self.vsini:
                 return -np.inf
         
+            chi2 = (r - self.rstar)**2 / self.e_rstar**2 + (p - self.prot)**2 / self.e_prot**2
+            
+        else:
+            chi2 = (self.vsini - cvsini)**2 / self.e_vsini**2 + (r - self.rstar)**2 / self.e_rstar**2 + (p - self.prot)**2 / self.e_prot**2
         
-        chi2 = (self.vsini - cvsini)**2 / self.e_vsini**2 + (r - self.rstar)**2 / self.e_rstar**2 + (p - self.prot)**2 / self.e_prot**2
         
         return -0.5 * chi2
     
@@ -168,6 +175,9 @@ class CosI(Probability):
         Stellar rotation period in days.
     e_prot : float
         Uncertainty on prot in days.
+    upperlimitvsini : bool, optional
+        Is vsini only available as an upper limit? The default is False,
+        i.e., vsini is measured with some confidence.
     
     """
     
