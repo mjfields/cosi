@@ -12,7 +12,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="cosi",
-    version="0.0.1",
+    version="0.1.0",
     author="Matthew J. Fields",
     author_email="fieldsmatthewj@gmail.com",
     description="MCMC estimation of stellar inclination angle",
