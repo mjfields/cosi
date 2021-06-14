@@ -260,7 +260,7 @@ class CosI(Probability):
         """
         
         if len(sampler.get_chain()) < 1500:
-            burnin = len(self.sampler.get_chain()) // 3
+            burnin = len(sampler.get_chain()) // 3
         
         chain = sampler.get_chain(flat=True, discard=burnin, thin=thin)
         
