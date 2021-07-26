@@ -186,10 +186,10 @@ class CosI(Probability):
         self._upperlimitvsini = upperlimitvsini
         
         super().__init__(vsini, e_vsini, rstar, e_rstar, prot, e_prot, upperlimitvsini=self._upperlimitvsini)
-    
-    
-    
-    
+        
+        
+        
+        
     def run_mcmc(self, nwalkers, nsteps, position=None, progress=True):
         
         """
@@ -220,12 +220,28 @@ class CosI(Probability):
         
         ndim = 3
         
-        p = position
+        log_prob = self.log_probability
         
-        if p is None:
-            p = [0.5, self.rstar, self.prot]
+        init_pos = position
         
-        pos = p + 0.02 * np.random.randn(nwalkers, ndim)
+        if init_pos is None:
+            init_pos = [0.5, self.rstar, self.prot]
+            
+        pos = []
+        i = 0
+        while len(pos) < nwalkers:
+            
+            i+=1
+            
+            p = init_pos + 0.02 * np.random.randn(ndim)
+            
+            if np.isfinite(log_prob(p)):
+                pos.append(p)
+                
+            if i > 1000:
+                print("Failed to initialize walkers. Try changing the intial conditions.")
+                
+                return False
         
         sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_probability)
         
