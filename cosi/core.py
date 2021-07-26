@@ -78,6 +78,7 @@ class Probability(object):
         
         cvsini = cv * sini
         
+        
         # if vsini is only known as an upper limit
         if self._upperlimitvsini:
             if cvsini > self.vsini:
@@ -190,7 +191,7 @@ class CosI(Probability):
         
         
         
-    def run_mcmc(self, nwalkers, nsteps, position=None, progress=True):
+    def run_mcmc(self, nwalkers, nsteps, position=None, perturbation=0.02, progress=True):
         
         """
         Runs an MCMC simulation using the emcee python package to estimate posterior distributions 
@@ -208,6 +209,9 @@ class CosI(Probability):
             The unperturbed initial position for each fit parameter. If None (default),
             sets initial positions at 0.5 for cosi and the values used when initializing
             ``class:CosI`` for rstar and prot, respectively.
+        perturbation : float, optional
+            The positions are varied by `perturbation` * samples of a standard normal
+            distribution. The default is 0.02. 
         progress : bool, optional
             If True (default), displays a progress bar using the tqdm python package.
             
@@ -226,6 +230,7 @@ class CosI(Probability):
         
         if init_pos is None:
             init_pos = [0.5, self.rstar, self.prot]
+        
             
         pos = []
         i = 0
@@ -233,15 +238,13 @@ class CosI(Probability):
             
             i+=1
             
-            p = init_pos + 0.02 * np.random.randn(ndim)
+            p = init_pos + perturbation * np.random.randn(ndim)
             
             if np.isfinite(log_prob(p)):
                 pos.append(p)
                 
             if i > 1000:
-                print("Failed to initialize walkers. Try changing the intial conditions.")
-                
-                return False
+                raise ValueError("Failed to initialize walkers. Try changing the intial position and/or perturbation.")
         
         sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_probability)
         
