@@ -191,7 +191,7 @@ class CosI(Probability):
         
         
         
-    def run_mcmc(self, nwalkers, nsteps, position=None, perturbation=0.02, progress=True):
+    def run_mcmc(self, nwalkers, nsteps, position=None, perturbation=0.02, tol=1000, progress=True):
         
         """
         Runs an MCMC simulation using the emcee python package to estimate posterior distributions 
@@ -212,6 +212,9 @@ class CosI(Probability):
         perturbation : float, optional
             The positions are varied by `perturbation` * samples of a standard normal
             distribution. The default is 0.02. 
+        tol : int, optional
+            Number of attempts to initialize walkers within their preferred bounds before an 
+            error is raised. The default is 1000.
         progress : bool, optional
             If True (default), displays a progress bar using the tqdm python package.
             
@@ -243,7 +246,7 @@ class CosI(Probability):
             if np.isfinite(log_prob(p)):
                 pos.append(p)
                 
-            if i > 1000:
+            if i > tol:
                 raise ValueError("Failed to initialize walkers. Try changing the intial position and/or perturbation.")
         
         sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_probability)
