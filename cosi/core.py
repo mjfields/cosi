@@ -74,7 +74,7 @@ class Probability(object):
         sini = np.sqrt(1 - cosi**2)
         
         # line-of-sight velocity; km/s
-        cv = 2 * np.pi * self.rstar * 6.957e5 / (self.prot * 24 * 3600)
+        cv = 2 * np.pi * r * 6.957e5 / (p * 24 * 3600)
         
         cvsini = cv * sini
         
